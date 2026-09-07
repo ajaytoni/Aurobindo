@@ -45,11 +45,16 @@ import facilityPersonal from "./personal.jpg";
 // SCHOOL DETAILS
 // =====================================================
 
-const schoolName = "Aurobindo Kakatiya Secondary School";
+const schoolName = "Aurobindo's Kakatiya Secondary School";
 const schoolPhone = "9959261196";
 const schoolEmail = "Aurobindo@117gmail.com";
 const whatsappNumber = "919959261196";
 
+// =====================================================
+// GALLERY PASSWORD
+// =====================================================
+
+const GALLERY_PASSWORD = "Aurobindo@123";
 const STORAGE_KEY = "aurobindokakatiya_local_gallery";
 
 // =====================================================
@@ -173,16 +178,15 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
 
+  const [galleryPasswordOpen, setGalleryPasswordOpen] = useState(false);
+  const [galleryPassword, setGalleryPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
   const [uploadedPhotos, setUploadedPhotos] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-
-      if (!saved) {
-        return [];
-      }
-
+      if (!saved) return [];
       const parsed = JSON.parse(saved);
-
       return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
       console.error("Gallery loading error:", error);
@@ -193,10 +197,7 @@ function App() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const allGalleryPhotos = [
-    ...uploadedPhotos,
-    ...localGallery,
-  ];
+  const allGalleryPhotos = [...uploadedPhotos, ...localGallery];
 
   // ===================================================
   // SAVE UPLOADED PHOTOS
@@ -204,13 +205,9 @@ function App() {
 
   const saveUploadedPhotos = (photos) => {
     try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(photos)
-      );
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(photos));
     } catch (error) {
       console.error("Gallery save error:", error);
-
       alert(
         "The photo could not be saved. Your browser storage may be full."
       );
@@ -221,11 +218,7 @@ function App() {
   // COMPRESS IMAGE
   // ===================================================
 
-  const compressImage = (
-    file,
-    maxWidth = 1600,
-    quality = 0.82
-  ) => {
+  const compressImage = (file, maxWidth = 1600, quality = 0.82) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
@@ -237,34 +230,19 @@ function App() {
           let height = image.height;
 
           if (width > maxWidth) {
-            height = Math.round(
-              (height * maxWidth) / width
-            );
-
+            height = Math.round((height * maxWidth) / width);
             width = maxWidth;
           }
 
           const canvas = document.createElement("canvas");
-
           canvas.width = width;
           canvas.height = height;
 
           const context = canvas.getContext("2d");
 
-          context.drawImage(
-            image,
-            0,
-            0,
-            width,
-            height
-          );
+          context.drawImage(image, 0, 0, width, height);
 
-          resolve(
-            canvas.toDataURL(
-              "image/jpeg",
-              quality
-            )
-          );
+          resolve(canvas.toDataURL("image/jpeg", quality));
         };
 
         image.onerror = reject;
@@ -277,17 +255,47 @@ function App() {
   };
 
   // ===================================================
+  // GALLERY PASSWORD
+  // ===================================================
+
+  const openGalleryPassword = () => {
+    setGalleryPassword("");
+    setPasswordError("");
+    setGalleryPasswordOpen(true);
+  };
+
+  const closeGalleryPassword = () => {
+    setGalleryPassword("");
+    setPasswordError("");
+    setGalleryPasswordOpen(false);
+  };
+
+  const verifyGalleryPassword = () => {
+    if (galleryPassword === GALLERY_PASSWORD) {
+      setGalleryPasswordOpen(false);
+      setGalleryPassword("");
+      setPasswordError("");
+
+      setTimeout(() => {
+        const uploadInput = document.getElementById(
+          "gallery-upload-input"
+        );
+
+        if (uploadInput) uploadInput.click();
+      }, 100);
+    } else {
+      setPasswordError("Incorrect password. Please try again.");
+    }
+  };
+
+  // ===================================================
   // ADD PHOTOS
   // ===================================================
 
   const handlePhotoUpload = async (event) => {
-    const files = Array.from(
-      event.target.files || []
-    );
+    const files = Array.from(event.target.files || []);
 
-    if (!files.length) {
-      return;
-    }
+    if (!files.length) return;
 
     setUploading(true);
     setUploadProgress(0);
@@ -298,9 +306,7 @@ function App() {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
 
-        if (!file.type.startsWith("image/")) {
-          continue;
-        }
+        if (!file.type.startsWith("image/")) continue;
 
         const src = await compressImage(file);
 
@@ -312,27 +318,19 @@ function App() {
         });
 
         setUploadProgress(
-          Math.round(
-            ((i + 1) / files.length) * 100
-          )
+          Math.round(((i + 1) / files.length) * 100)
         );
       }
 
       if (newPhotos.length > 0) {
-        const updatedPhotos = [
-          ...newPhotos,
-          ...uploadedPhotos,
-        ];
+        const updatedPhotos = [...newPhotos, ...uploadedPhotos];
 
         setUploadedPhotos(updatedPhotos);
         saveUploadedPhotos(updatedPhotos);
       }
     } catch (error) {
       console.error("Photo upload error:", error);
-
-      alert(
-        "There was a problem adding the photos."
-      );
+      alert("There was a problem adding the photos.");
     } finally {
       setUploading(false);
 
@@ -349,21 +347,13 @@ function App() {
   // ===================================================
 
   const deleteSelectedUploadedPhoto = () => {
-    if (!selectedImage) {
-      return;
-    }
-
-    if (selectedImage.type !== "uploaded") {
-      return;
-    }
+    if (!selectedImage || selectedImage.type !== "uploaded") return;
 
     const confirmed = window.confirm(
       "Remove this photo from the gallery?"
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     const updatedPhotos = uploadedPhotos.filter(
       (photo) => photo.id !== selectedImage.id
@@ -379,17 +369,13 @@ function App() {
   // ===================================================
 
   const clearUploadedPhotos = () => {
-    if (!uploadedPhotos.length) {
-      return;
-    }
+    if (!uploadedPhotos.length) return;
 
     const confirmed = window.confirm(
       "Remove all added photos from this browser?"
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     setUploadedPhotos([]);
     localStorage.removeItem(STORAGE_KEY);
@@ -406,6 +392,28 @@ function App() {
 
   const closeImage = () => {
     setSelectedImage(null);
+  };
+
+  // ===================================================
+  // HOME / ABOUT IMAGE LIGHTBOX
+  // ===================================================
+
+  const openHomeImage = () => {
+    openImage({
+      id: "home-image",
+      name: schoolName,
+      src: homeImage,
+      type: "home",
+    });
+  };
+
+  const openAboutImage = () => {
+    openImage({
+      id: "about-image",
+      name: `About ${schoolName}`,
+      src: aboutImage,
+      type: "about",
+    });
   };
 
   // ===================================================
@@ -441,19 +449,21 @@ Message:
 ${message}
     `.trim();
 
-    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-      text
-    )}`;
+    const url =
+      `https://wa.me/${whatsappNumber}?text=` +
+      encodeURIComponent(text);
 
     window.open(url, "_blank");
   };
 
   const admissionWhatsApp = () => {
-    const text = `Hello ${schoolName}, I would like to know more about admission.`;
+    const text =
+      `Hello ${schoolName}, ` +
+      `I would like to know more about admission.`;
 
-    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-      text
-    )}`;
+    const url =
+      `https://wa.me/${whatsappNumber}?text=` +
+      encodeURIComponent(text);
 
     window.open(url, "_blank");
   };
@@ -463,14 +473,13 @@ ${message}
   // ===================================================
 
   useEffect(() => {
-    document.body.style.overflow = selectedImage
-      ? "hidden"
-      : "";
+    document.body.style.overflow =
+      selectedImage || galleryPasswordOpen ? "hidden" : "";
 
     return () => {
       document.body.style.overflow = "";
     };
-  }, [selectedImage]);
+  }, [selectedImage, galleryPasswordOpen]);
 
   // ===================================================
   // ESCAPE KEY
@@ -481,29 +490,20 @@ ${message}
       if (event.key === "Escape") {
         setSelectedImage(null);
         setMobileMenuOpen(false);
+        closeGalleryPassword();
       }
     };
 
-    window.addEventListener(
-      "keydown",
-      handleKeyDown
-    );
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener(
-        "keydown",
-        handleKeyDown
-      );
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
   return (
     <>
       <style>{`
-
-        /* =================================================
-           GLOBAL
-        ================================================= */
 
         * {
           box-sizing: border-box;
@@ -695,9 +695,7 @@ ${message}
 
         .section-heading-row {
           display: grid;
-          grid-template-columns:
-            minmax(0, 1fr)
-            minmax(320px, 0.8fr);
+          grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
           align-items: end;
           gap: 30px;
           margin-bottom: 16px;
@@ -753,7 +751,7 @@ ${message}
         }
 
         /* =================================================
-           HOME - TIGHT
+           HOME
         ================================================= */
 
         .hero {
@@ -766,9 +764,7 @@ ${message}
 
         .hero-grid {
           display: grid;
-          grid-template-columns:
-            minmax(0, 1fr)
-            minmax(420px, 0.95fr);
+          grid-template-columns: minmax(0, 1fr) minmax(420px, 0.95fr);
           align-items: center;
           gap: 26px;
         }
@@ -785,12 +781,17 @@ ${message}
         }
 
         .hero-label {
-          color: #b57916;
-          font-size: 11px;
+          width: 100%;
+          max-width: 620px;
+          min-height: 58px;
+          display: flex;
+          align-items: center;
+          color: #15213b;
+          font-size: 27px;
+          line-height: 1.18;
           font-weight: 800;
-          letter-spacing: 1.8px;
-          text-transform: uppercase;
-          margin-bottom: 7px;
+          letter-spacing: -0.3px;
+          margin-bottom: 5px;
         }
 
         .hero-content .gold-line {
@@ -809,10 +810,7 @@ ${message}
           margin: 0;
         }
 
-        .hero-text-second {
-          margin-top: 7px;
-        }
-
+        .hero-text-second,
         .hero-text-third {
           margin-top: 7px;
         }
@@ -856,7 +854,6 @@ ${message}
           background: #15213b;
           color: #fff;
           transform: translateY(-3px);
-          box-shadow: 0 9px 20px rgba(21, 33, 59, 0.16);
         }
 
         .hero-image-frame {
@@ -868,6 +865,7 @@ ${message}
           background: #ddd;
           box-shadow: 0 12px 30px rgba(21, 33, 59, 0.13);
           transition: 0.3s ease;
+          cursor: pointer;
         }
 
         .hero-image-frame:hover {
@@ -881,6 +879,7 @@ ${message}
           display: block;
           object-fit: cover;
           transition: transform 0.5s ease;
+          cursor: pointer;
         }
 
         .hero-image-frame:hover img {
@@ -897,9 +896,7 @@ ${message}
 
         .about-grid {
           display: grid;
-          grid-template-columns:
-            minmax(420px, 0.95fr)
-            minmax(0, 1fr);
+          grid-template-columns: minmax(420px, 0.95fr) minmax(0, 1fr);
           align-items: stretch;
           gap: 30px;
         }
@@ -913,6 +910,7 @@ ${message}
           background: #ddd;
           box-shadow: 0 15px 35px rgba(21, 33, 59, 0.13);
           transition: 0.3s ease;
+          cursor: pointer;
         }
 
         .about-image-frame:hover {
@@ -926,6 +924,7 @@ ${message}
           display: block;
           object-fit: cover;
           transition: transform 0.5s ease;
+          cursor: pointer;
         }
 
         .about-image-frame:hover img {
@@ -979,11 +978,6 @@ ${message}
         .about-point strong {
           color: #b57916;
           font-size: 11px;
-          transition: 0.25s ease;
-        }
-
-        .about-point:hover strong {
-          transform: scale(1.08);
         }
 
         .about-point span {
@@ -998,21 +992,6 @@ ${message}
 
         .programs {
           background: #f8f3e7;
-        }
-
-        .programs .section-heading-row {
-          display: grid;
-          grid-template-columns:
-            minmax(0, 1fr)
-            minmax(320px, 0.8fr);
-          align-items: end;
-          gap: 30px;
-          margin-bottom: 16px;
-        }
-
-        .programs .section-description {
-          margin: 0;
-          max-width: 620px;
         }
 
         .program-grid {
@@ -1088,16 +1067,6 @@ ${message}
           color: #fff;
         }
 
-        .admission .section-heading-row {
-          display: grid;
-          grid-template-columns:
-            minmax(0, 1fr)
-            minmax(320px, 0.8fr);
-          align-items: end;
-          gap: 30px;
-          margin-bottom: 16px;
-        }
-
         .admission .section-label {
           color: #d7a74e;
         }
@@ -1108,21 +1077,17 @@ ${message}
 
         .admission .section-description {
           color: rgba(255, 255, 255, 0.72);
-          margin: 0;
         }
 
         .admission-layout {
           display: grid;
-          grid-template-columns:
-            minmax(0, 1.15fr)
-            minmax(360px, 0.85fr);
+          grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
           gap: 18px;
           align-items: stretch;
         }
 
         .admission-main {
           min-width: 0;
-          height: 100%;
           padding: 20px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           border-radius: 12px;
@@ -1139,15 +1104,11 @@ ${message}
           margin-bottom: 7px;
           color: #fff;
           font-size: 20px;
-          line-height: 1.35;
         }
 
         .admission-main > p {
-          width: 100%;
-          margin: 0;
           color: rgba(255, 255, 255, 0.7);
           font-size: 12.5px;
-          line-height: 1.65;
         }
 
         .admission-list {
@@ -1181,20 +1142,15 @@ ${message}
         }
 
         .admission-list-item span {
-          width: 100%;
           color: rgba(255, 255, 255, 0.82);
           font-size: 11.5px;
-          line-height: 1.5;
         }
 
         .admission-side {
           min-width: 0;
-          height: 100%;
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          grid-template-rows: 1fr 1fr auto;
           gap: 8px;
-          align-content: stretch;
         }
 
         .admission-item {
@@ -1217,16 +1173,12 @@ ${message}
 
         .admission-item strong {
           margin-bottom: 5px;
-          color: #15213b;
           font-size: 14px;
-          line-height: 1.3;
         }
 
         .admission-item span {
-          width: 100%;
           color: #5d6678;
           font-size: 11.5px;
-          line-height: 1.5;
         }
 
         .admission-button {
@@ -1245,7 +1197,6 @@ ${message}
         .admission-button:hover {
           background: #fff;
           transform: translateY(-3px);
-          box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
         }
 
         /* =================================================
@@ -1256,21 +1207,10 @@ ${message}
           background: #fffdf8;
         }
 
-        .facilities .section-heading-row {
-          display: grid;
-          grid-template-columns:
-            minmax(0, 1fr)
-            minmax(320px, 0.8fr);
-          align-items: end;
-          gap: 30px;
-          margin-bottom: 16px;
-        }
-
         .facility-grid {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 10px;
-          align-items: stretch;
         }
 
         .facility-card {
@@ -1326,15 +1266,11 @@ ${message}
           margin-bottom: 7px;
           color: #15213b;
           font-size: 15px;
-          line-height: 1.3;
         }
 
         .facility-content p {
-          width: 100%;
-          margin: 0;
           color: #5d6678;
           font-size: 12.5px;
-          line-height: 1.6;
         }
 
         /* =================================================
@@ -1375,7 +1311,6 @@ ${message}
         .upload-button:hover {
           background: #b57916;
           transform: translateY(-3px);
-          box-shadow: 0 9px 20px rgba(181, 121, 22, 0.2);
         }
 
         .remove-all-button {
@@ -1438,6 +1373,17 @@ ${message}
           transform: scale(1.06);
         }
 
+        /* =================================================
+           IMPORTANT:
+           SHOW HEADS IN AU5, AU8 AND AU13
+        ================================================= */
+
+        .gallery-au5,
+        .gallery-au8,
+        .gallery-au13 {
+          object-position: center 20%;
+        }
+
         .gallery-card::after {
           content: "View";
           position: absolute;
@@ -1461,6 +1407,144 @@ ${message}
         }
 
         /* =================================================
+           PASSWORD POPUP
+        ================================================= */
+
+        .password-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 3000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          background: rgba(10, 15, 25, 0.78);
+          backdrop-filter: blur(6px);
+        }
+
+        .password-box {
+          position: relative;
+          width: min(390px, 100%);
+          padding: 28px 24px 24px;
+          border-radius: 14px;
+          background: #fffdf8;
+          box-shadow: 0 25px 70px rgba(0, 0, 0, 0.28);
+          text-align: center;
+          animation: passwordPopup 0.25s ease;
+        }
+
+        @keyframes passwordPopup {
+          from {
+            opacity: 0;
+            transform: translateY(15px) scale(0.97);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .password-close {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          width: 32px;
+          height: 32px;
+          border: 0;
+          border-radius: 50%;
+          background: #f8f3e7;
+          color: #15213b;
+          font-size: 20px;
+        }
+
+        .password-close:hover {
+          background: #b57916;
+          color: #fff;
+          transform: rotate(90deg);
+        }
+
+        .password-icon {
+          width: 52px;
+          height: 52px;
+          margin: 0 auto 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          background: #15213b;
+          font-size: 22px;
+        }
+
+        .password-box h3 {
+          margin-bottom: 7px;
+          color: #15213b;
+          font-size: 21px;
+        }
+
+        .password-box p {
+          margin-bottom: 17px;
+          color: #5d6678;
+          font-size: 12px;
+          line-height: 1.6;
+        }
+
+        .password-box input {
+          width: 100%;
+          height: 44px;
+          padding: 10px 13px;
+          border: 1px solid rgba(21, 33, 59, 0.15);
+          border-radius: 8px;
+          outline: none;
+          background: #fff;
+          color: #172033;
+          font-size: 13px;
+        }
+
+        .password-box input:focus {
+          border-color: #b57916;
+          box-shadow: 0 0 0 3px rgba(181, 121, 22, 0.08);
+        }
+
+        .password-error {
+          margin-top: 8px;
+          color: #c0392b;
+          font-size: 11px;
+          font-weight: 700;
+        }
+
+        .password-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          margin-top: 15px;
+        }
+
+        .password-cancel,
+        .password-submit {
+          min-height: 40px;
+          border-radius: 8px;
+          font-size: 11.5px;
+          font-weight: 800;
+        }
+
+        .password-cancel {
+          border: 1px solid rgba(21, 33, 59, 0.15);
+          background: transparent;
+          color: #15213b;
+        }
+
+        .password-submit {
+          border: 0;
+          background: #15213b;
+          color: #fff;
+        }
+
+        .password-submit:hover {
+          background: #b57916;
+          transform: translateY(-2px);
+        }
+
+        /* =================================================
            CONTACT
         ================================================= */
 
@@ -1470,9 +1554,7 @@ ${message}
 
         .contact-grid {
           display: grid;
-          grid-template-columns:
-            minmax(0, 0.85fr)
-            minmax(0, 1.15fr);
+          grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
           gap: 20px;
           align-items: start;
         }
@@ -1496,10 +1578,8 @@ ${message}
         }
 
         .contact-info > p {
-          width: 100%;
           color: rgba(255, 255, 255, 0.7);
           font-size: 12.5px;
-          line-height: 1.65;
         }
 
         .contact-details {
@@ -1509,24 +1589,26 @@ ${message}
         }
 
         .contact-detail {
-          padding: 10px;
+          padding: 12px 10px;
           border-radius: 8px;
           background: rgba(255, 255, 255, 0.07);
           transition: 0.25s ease;
+          text-align: center;
         }
 
         .contact-detail:hover {
           background: rgba(255, 255, 255, 0.13);
-          transform: translateX(3px);
+          transform: translateY(-3px);
         }
 
         .contact-detail strong {
           display: block;
-          margin-bottom: 3px;
+          margin-bottom: 5px;
           color: #d7a74e;
           font-size: 10px;
           text-transform: uppercase;
           letter-spacing: 0.8px;
+          text-align: center;
         }
 
         .contact-detail span,
@@ -1537,6 +1619,7 @@ ${message}
           line-height: 1.5;
           text-decoration: none;
           word-break: break-word;
+          text-align: center;
         }
 
         .contact-detail a:hover {
@@ -1591,14 +1674,12 @@ ${message}
           color: #172033;
           font-size: 12px;
           padding: 9px 11px;
-          transition: 0.2s ease;
         }
 
         .form-group input:focus,
         .form-group textarea:focus {
           border-color: #b57916;
           box-shadow: 0 0 0 3px rgba(181, 121, 22, 0.08);
-          transform: translateY(-1px);
         }
 
         .form-group textarea {
@@ -1621,7 +1702,6 @@ ${message}
         .contact-submit:hover {
           background: #b57916;
           transform: translateY(-3px);
-          box-shadow: 0 10px 22px rgba(181, 121, 22, 0.2);
         }
 
         /* =================================================
@@ -1662,10 +1742,6 @@ ${message}
           transform: scale(1.08);
         }
 
-        .footer-brand-content {
-          min-width: 0;
-        }
-
         .footer h3 {
           margin-bottom: 7px;
           color: #fff;
@@ -1673,10 +1749,8 @@ ${message}
         }
 
         .footer p {
-          width: 100%;
           color: rgba(255, 255, 255, 0.65);
           font-size: 11.5px;
-          line-height: 1.6;
         }
 
         .footer-links {
@@ -1735,7 +1809,7 @@ ${message}
           align-items: center;
           justify-content: center;
           padding: 20px;
-          background: rgba(0, 0, 0, 0.9);
+          background: rgba(0, 0, 0, 0.92);
         }
 
         .lightbox-content {
@@ -1801,13 +1875,6 @@ ${message}
           color: #fff;
           font-size: 11px;
           font-weight: 800;
-          transition: 0.25s ease;
-        }
-
-        .lightbox-remove:hover {
-          background: #fff;
-          color: #15213b;
-          transform: translateY(-2px);
         }
 
         /* =================================================
@@ -1815,7 +1882,6 @@ ${message}
         ================================================= */
 
         @media (max-width: 1100px) {
-
           .container {
             width: min(100% - 30px, 1100px);
           }
@@ -1849,14 +1915,15 @@ ${message}
             gap: 22px;
           }
 
-          .hero-content {
+          .hero-content,
+          .hero-image-frame {
             height: 380px;
             min-height: 380px;
           }
 
-          .hero-image-frame {
-            height: 380px;
-            min-height: 380px;
+          .hero-label {
+            font-size: 24px;
+            min-height: 55px;
           }
 
           .hero-text {
@@ -1868,9 +1935,7 @@ ${message}
           }
 
           .admission-layout {
-            grid-template-columns:
-              minmax(0, 1fr)
-              minmax(320px, 0.8fr);
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
             gap: 16px;
           }
         }
@@ -1880,7 +1945,6 @@ ${message}
         ================================================= */
 
         @media (max-width: 920px) {
-
           .desktop-nav {
             display: flex;
             flex: 1;
@@ -1953,11 +2017,10 @@ ${message}
         }
 
         /* =================================================
-           650px
+           650px MOBILE
         ================================================= */
 
         @media (max-width: 650px) {
-
           .container {
             width: calc(100% - 24px);
           }
@@ -1975,29 +2038,14 @@ ${message}
             justify-content: space-between;
           }
 
-          .desktop-nav {
-            display: flex;
+          .desktop-nav,
+          .header-contact {
+            display: none !important;
+          }
+
+          .brand {
             flex: 1;
-            justify-content: flex-end;
-            gap: 5px;
-          }
-
-          .desktop-nav .nav-button {
-            display: none;
-          }
-
-          .desktop-nav .nav-button:last-child {
-            display: block;
-            padding: 8px 5px;
-            border-radius: 7px;
-            background: #15213b;
-            color: #fff;
-            font-size: 11px;
-          }
-
-          .desktop-nav .nav-button:last-child:hover {
-            background: #b57916;
-            color: #fff;
+            min-width: 0;
           }
 
           .brand-logo {
@@ -2044,7 +2092,6 @@ ${message}
             text-align: left;
             font-size: 13px;
             font-weight: 700;
-            transition: 0.2s ease;
           }
 
           .mobile-menu button:hover {
@@ -2058,10 +2105,6 @@ ${message}
             gap: 7px;
             margin-bottom: 11px;
           }
-
-          /* ===============================================
-             MOBILE HOME
-          =============================================== */
 
           .hero {
             min-height: auto;
@@ -2078,8 +2121,12 @@ ${message}
           }
 
           .hero-label {
-            margin-bottom: 6px;
-            font-size: 10px;
+            width: 100%;
+            max-width: 100%;
+            min-height: 48px;
+            font-size: 20px;
+            line-height: 1.2;
+            margin-bottom: 4px;
           }
 
           .hero-content .gold-line {
@@ -2093,10 +2140,7 @@ ${message}
             line-height: 1.55;
           }
 
-          .hero-text-second {
-            margin-top: 6px;
-          }
-
+          .hero-text-second,
           .hero-text-third {
             margin-top: 6px;
           }
@@ -2118,10 +2162,6 @@ ${message}
             border-radius: 11px;
           }
 
-          /* ===============================================
-             ABOUT
-          =============================================== */
-
           .about-image-frame {
             min-height: auto;
             height: auto;
@@ -2139,10 +2179,6 @@ ${message}
             margin-top: 8px;
           }
 
-          /* ===============================================
-             PROGRAMS
-          =============================================== */
-
           .program-grid,
           .facility-grid {
             grid-template-columns: 1fr;
@@ -2154,13 +2190,10 @@ ${message}
             padding: 14px;
           }
 
-          .program-card h3 {
+          .program-card h3,
+          .facility-content h3 {
             min-height: auto;
           }
-
-          /* ===============================================
-             FACILITIES
-          =============================================== */
 
           .facility-image {
             height: auto;
@@ -2172,14 +2205,6 @@ ${message}
             min-height: auto;
           }
 
-          .facility-content h3 {
-            min-height: auto;
-          }
-
-          /* ===============================================
-             ADMISSION
-          =============================================== */
-
           .admission-list {
             grid-template-columns: 1fr;
             gap: 7px;
@@ -2188,7 +2213,6 @@ ${message}
 
           .admission-side {
             grid-template-columns: 1fr;
-            grid-template-rows: auto;
             gap: 7px;
           }
 
@@ -2199,10 +2223,6 @@ ${message}
           .admission-button {
             grid-column: auto;
           }
-
-          /* ===============================================
-             GALLERY
-          =============================================== */
 
           .gallery-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2218,17 +2238,37 @@ ${message}
             text-align: left;
           }
 
-          /* ===============================================
-             CONTACT
-          =============================================== */
+          .password-overlay {
+            padding: 14px;
+          }
+
+          .password-box {
+            width: 100%;
+            padding: 25px 18px 19px;
+            border-radius: 12px;
+          }
+
+          .password-box h3 {
+            font-size: 19px;
+          }
+
+          .password-box p {
+            font-size: 11.5px;
+          }
 
           .form-row {
             grid-template-columns: 1fr;
           }
 
-          /* ===============================================
-             FOOTER
-          =============================================== */
+          .contact-detail {
+            text-align: center;
+          }
+
+          .contact-detail strong,
+          .contact-detail span,
+          .contact-detail a {
+            text-align: center;
+          }
 
           .footer {
             padding: 18px 0 12px;
@@ -2249,10 +2289,6 @@ ${message}
             height: 52px;
             flex-basis: 52px;
           }
-
-          /* ===============================================
-             LIGHTBOX
-          =============================================== */
 
           .lightbox {
             padding: 12px;
@@ -2276,12 +2312,15 @@ ${message}
           .admission-list-item span,
           .admission-item span,
           .contact-info > p,
-          .contact-detail span,
-          .contact-detail a,
           .footer p {
             text-align: justify;
             text-justify: inter-word;
             line-height: 1.6;
+          }
+
+          .contact-detail span,
+          .contact-detail a {
+            text-align: center;
           }
         }
 
@@ -2290,7 +2329,6 @@ ${message}
         ================================================= */
 
         @media (max-width: 400px) {
-
           .brand-name {
             font-size: 11.5px;
           }
@@ -2305,6 +2343,11 @@ ${message}
 
           .hero-grid {
             gap: 12px;
+          }
+
+          .hero-label {
+            min-height: 44px;
+            font-size: 18px;
           }
 
           .hero-text {
@@ -2332,9 +2375,12 @@ ${message}
             grid-template-columns: 1fr;
           }
 
-          .desktop-nav .nav-button:last-child {
-            font-size: 10px;
-            padding: 7px 4px;
+          .password-box {
+            padding: 23px 15px 17px;
+          }
+
+          .password-actions {
+            grid-template-columns: 1fr;
           }
         }
 
@@ -2345,14 +2391,12 @@ ${message}
       ================================================= */}
 
       <header className="header">
-
         <div className="container header-inner">
 
           <div
             className="brand"
             onClick={() => goToSection("home")}
           >
-
             <img
               className="brand-logo"
               src={schoolLogo}
@@ -2360,7 +2404,6 @@ ${message}
             />
 
             <div className="brand-text">
-
               <div className="brand-name">
                 {schoolName}
               </div>
@@ -2368,10 +2411,10 @@ ${message}
               <div className="brand-subtitle">
                 Education • Values • Excellence
               </div>
-
             </div>
-
           </div>
+
+          {/* DESKTOP NAVIGATION - CONTACT REMOVED */}
 
           <nav className="desktop-nav">
 
@@ -2417,13 +2460,6 @@ ${message}
               Gallery
             </button>
 
-            <button
-              className="nav-button"
-              onClick={() => goToSection("contact")}
-            >
-              Contact
-            </button>
-
           </nav>
 
           <a
@@ -2435,9 +2471,7 @@ ${message}
 
           <button
             className="menu-button"
-            onClick={() =>
-              setMobileMenuOpen(!mobileMenuOpen)
-            }
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Open menu"
           >
             {mobileMenuOpen ? "×" : "☰"}
@@ -2445,8 +2479,9 @@ ${message}
 
         </div>
 
-        {mobileMenuOpen && (
+        {/* MOBILE MENU - CONTACT REMOVED */}
 
+        {mobileMenuOpen && (
           <div className="mobile-menu">
 
             <button onClick={() => goToSection("home")}>
@@ -2473,22 +2508,16 @@ ${message}
               Gallery
             </button>
 
-            <button onClick={() => goToSection("contact")}>
-              Contact
-            </button>
-
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                window.location.href =
-                  `tel:${schoolPhone}`;
+                window.location.href = `tel:${schoolPhone}`;
               }}
             >
               Call Now
             </button>
 
           </div>
-
         )}
 
       </header>
@@ -2498,37 +2527,38 @@ ${message}
       ================================================= */}
 
       <section id="home" className="hero">
-
         <div className="container hero-grid">
 
           <div className="hero-content">
 
             <div className="hero-label">
-              Welcome to Our School
+              Welcome to {schoolName}
             </div>
 
             <div className="gold-line" />
 
             <p className="hero-text">
-              Aurobindo Kakatiya Secondary School is
-              committed to providing quality education,
-              strong values, discipline, confidence, and
-              holistic development for every student.
+              {schoolName} is committed to providing
+              quality education, strong values,
+              discipline, confidence, and holistic
+              development for every student.
             </p>
 
             <p className="hero-text hero-text-second">
-              We create a supportive learning environment
-              where students are encouraged to learn with
-              curiosity, develop their talents, build
-              strong character, and prepare confidently
+              We create a supportive learning
+              environment where students are
+              encouraged to learn with curiosity,
+              develop their talents, build strong
+              character, and prepare confidently
               for a successful future.
             </p>
 
             <p className="hero-text hero-text-third">
-              Our goal is to help an every child discover
-              their strengths, improve their knowledge,
-              and grow into a responsible and confident
-              individual through meaningful learning
+              Our goal is to help every child
+              discover their strengths, improve
+              their knowledge, and grow into a
+              responsible and confident individual
+              through meaningful learning
               experiences.
             </p>
 
@@ -2552,37 +2582,39 @@ ${message}
 
           </div>
 
-          <div className="hero-image-frame">
+          {/* CLICKABLE HOME IMAGE */}
 
+          <div
+            className="hero-image-frame"
+            onClick={openHomeImage}
+          >
             <img
               src={homeImage}
               alt={schoolName}
             />
-
           </div>
 
         </div>
-
       </section>
 
       {/* =================================================
           ABOUT
       ================================================= */}
 
-      <section
-        id="about"
-        className="section about"
-      >
+      <section id="about" className="section about">
 
         <div className="container about-grid">
 
-          <div className="about-image-frame">
+          {/* CLICKABLE ABOUT IMAGE */}
 
+          <div
+            className="about-image-frame"
+            onClick={openAboutImage}
+          >
             <img
               src={aboutImage}
-              alt="About Aurobindo Kakatiya Secondary School"
+              alt={`About ${schoolName}`}
             />
-
           </div>
 
           <div className="about-content">
@@ -2592,24 +2624,26 @@ ${message}
             </div>
 
             <h2 className="section-title">
-              Education with Purpose, Values with Vision.
+              Education with Purpose,
+              Values with Vision.
             </h2>
 
             <div className="gold-line" />
 
             <p className="section-description">
-              Aurobindo Kakatiya Secondary School believes
-              that education is not only about academic
-              success but also about developing
-              responsible, confident, and disciplined
+              {schoolName} believes that education is
+              not only about academic success but
+              also about developing responsible,
+              confident, and disciplined
               individuals.
             </p>
 
             <p className="section-description">
-              We provide students with a supportive
-              learning environment where they can develop
-              knowledge, creativity, communication skills,
-              leadership qualities, and strong moral values.
+              We provide students with a
+              supportive learning environment where
+              they can develop knowledge, creativity,
+              communication skills, leadership
+              qualities, and strong moral values.
             </p>
 
             <div className="about-points">
@@ -2646,17 +2680,13 @@ ${message}
           PROGRAMS
       ================================================= */}
 
-      <section
-        id="programs"
-        className="section programs"
-      >
+      <section id="programs" className="section programs">
 
         <div className="container">
 
           <div className="section-heading-row">
 
             <div>
-
               <div className="section-label">
                 Our Programs
               </div>
@@ -2664,13 +2694,13 @@ ${message}
               <h2 className="section-title">
                 Learning That Builds Confidence.
               </h2>
-
             </div>
 
             <p className="section-description">
-              Our educational approach combines strong
-              academics with practical learning, values,
-              creativity, communication, and personal
+              Our educational approach combines
+              strong academics with practical
+              learning, values, creativity,
+              communication, and personal
               development.
             </p>
 
@@ -2679,26 +2709,18 @@ ${message}
           <div className="program-grid">
 
             {programs.map((program) => (
-
               <div
                 className="program-card"
                 key={program.number}
               >
-
                 <div className="program-number">
                   {program.number}
                 </div>
 
-                <h3>
-                  {program.title}
-                </h3>
+                <h3>{program.title}</h3>
 
-                <p>
-                  {program.text}
-                </p>
-
+                <p>{program.text}</p>
               </div>
-
             ))}
 
           </div>
@@ -2711,17 +2733,13 @@ ${message}
           ADMISSION
       ================================================= */}
 
-      <section
-        id="admission"
-        className="section admission"
-      >
+      <section id="admission" className="section admission">
 
         <div className="container">
 
           <div className="section-heading-row">
 
             <div>
-
               <div className="section-label">
                 Admissions
               </div>
@@ -2729,14 +2747,14 @@ ${message}
               <h2 className="section-title">
                 Start Your Child's Journey With Us.
               </h2>
-
             </div>
 
             <p className="section-description">
-              We welcome families who are looking for a
-              supportive school environment focused on
-              education, discipline, values, and
-              comprehensive student development.
+              We welcome families who are looking
+              for a supportive school environment
+              focused on education, discipline,
+              values, and comprehensive student
+              development.
             </p>
 
           </div>
@@ -2745,15 +2763,14 @@ ${message}
 
             <div className="admission-main">
 
-              <h3>
-                Admission Enquiry
-              </h3>
+              <h3>Admission Enquiry</h3>
 
               <p>
-                Connect with our school team to learn more
-                about the admission process, academic
-                programs, school environment, and other
-                important information.
+                Connect with our school team to
+                learn more about the admission
+                process, academic programs, school
+                environment, and other important
+                information.
               </p>
 
               <div className="admission-list">
@@ -2761,32 +2778,33 @@ ${message}
                 <div className="admission-list-item">
                   <strong>01</strong>
                   <span>
-                    Enquire about admission availability
-                    and the application process.
+                    Enquire about admission
+                    availability and the application
+                    process.
                   </span>
                 </div>
 
                 <div className="admission-list-item">
                   <strong>02</strong>
                   <span>
-                    Understand our academic approach and
-                    learning environment.
+                    Understand our academic approach
+                    and learning environment.
                   </span>
                 </div>
 
                 <div className="admission-list-item">
                   <strong>03</strong>
                   <span>
-                    Discuss your child's educational needs
-                    with our team.
+                    Discuss your child's educational
+                    needs with our team.
                   </span>
                 </div>
 
                 <div className="admission-list-item">
                   <strong>04</strong>
                   <span>
-                    Receive guidance about the next steps
-                    for admission.
+                    Receive guidance about the next
+                    steps for admission.
                   </span>
                 </div>
 
@@ -2797,55 +2815,35 @@ ${message}
             <div className="admission-side">
 
               <div className="admission-item">
-
-                <strong>
-                  Academic Focus
-                </strong>
-
+                <strong>Academic Focus</strong>
                 <span>
-                  Strong foundations and focused classroom
-                  learning.
+                  Strong foundations and focused
+                  classroom learning.
                 </span>
-
               </div>
 
               <div className="admission-item">
-
-                <strong>
-                  Student Care
-                </strong>
-
+                <strong>Student Care</strong>
                 <span>
                   Individual attention and supportive
                   guidance.
                 </span>
-
               </div>
 
               <div className="admission-item">
-
-                <strong>
-                  Values
-                </strong>
-
+                <strong>Values</strong>
                 <span>
-                  Discipline, respect, responsibility, and
-                  confidence.
+                  Discipline, respect,
+                  responsibility, and confidence.
                 </span>
-
               </div>
 
               <div className="admission-item">
-
-                <strong>
-                  Development
-                </strong>
-
+                <strong>Development</strong>
                 <span>
                   Academic, creative, physical, and
                   personal growth.
                 </span>
-
               </div>
 
               <button
@@ -2867,17 +2865,13 @@ ${message}
           FACILITIES
       ================================================= */}
 
-      <section
-        id="facilities"
-        className="section facilities"
-      >
+      <section id="facilities" className="section facilities">
 
         <div className="container">
 
           <div className="section-heading-row">
 
             <div>
-
               <div className="section-label">
                 Our Facilities
               </div>
@@ -2885,14 +2879,13 @@ ${message}
               <h2 className="section-title">
                 A Supportive Place to Learn.
               </h2>
-
             </div>
 
             <p className="section-description">
-              Our facilities are designed to provide
-              students with a comfortable, safe, and
-              positive environment for learning and
-              development.
+              Our facilities are designed to
+              provide students with a comfortable,
+              safe, and positive environment for
+              learning and development.
             </p>
 
           </div>
@@ -2900,7 +2893,6 @@ ${message}
           <div className="facility-grid">
 
             {facilities.map((facility) => (
-
               <div
                 className="facility-card"
                 key={facility.title}
@@ -2925,18 +2917,13 @@ ${message}
 
                 <div className="facility-content">
 
-                  <h3>
-                    {facility.title}
-                  </h3>
+                  <h3>{facility.title}</h3>
 
-                  <p>
-                    {facility.text}
-                  </p>
+                  <p>{facility.text}</p>
 
                 </div>
 
               </div>
-
             ))}
 
           </div>
@@ -2949,17 +2936,13 @@ ${message}
           GALLERY
       ================================================= */}
 
-      <section
-        id="gallery"
-        className="section gallery"
-      >
+      <section id="gallery" className="section gallery">
 
         <div className="container">
 
           <div className="section-heading-row">
 
             <div>
-
               <div className="section-label">
                 School Gallery
               </div>
@@ -2967,7 +2950,6 @@ ${message}
               <h2 className="section-title">
                 Moments From Our School.
               </h2>
-
             </div>
 
             <p className="section-description">
@@ -2980,13 +2962,18 @@ ${message}
 
           <div className="gallery-toolbar">
 
-            <label className="upload-button">
-
+            <div
+              className="upload-button"
+              onClick={() => {
+                if (!uploading) openGalleryPassword();
+              }}
+            >
               {uploading
                 ? "Adding Photos..."
                 : "Add Photos"}
 
               <input
+                id="gallery-upload-input"
                 className="upload-input"
                 type="file"
                 accept="image/*"
@@ -2994,48 +2981,62 @@ ${message}
                 onChange={handlePhotoUpload}
                 disabled={uploading}
               />
-
-            </label>
+            </div>
 
             {uploadedPhotos.length > 0 && (
-
               <button
                 className="remove-all-button"
                 onClick={clearUploadedPhotos}
               >
                 Remove Added Photos
               </button>
-
             )}
 
           </div>
 
           {uploadProgress > 0 && (
-
             <div className="upload-progress">
               {uploadProgress}% added
             </div>
-
           )}
 
           <div className="gallery-grid">
 
-            {allGalleryPhotos.map((photo) => (
+            {allGalleryPhotos.map((photo) => {
 
-              <div
-                className="gallery-card"
-                key={photo.id}
-                onClick={() => openImage(photo)}
-              >
+              const isAu5 =
+                photo.src === galleryImage4;
 
-                <img
-                  src={photo.src}
-                  alt={photo.name}
-                />
+              const isAu8 =
+                photo.src === galleryImage7;
 
-              </div>
+              const isAu13 =
+                photo.src === galleryImage12;
 
-            ))}
+              return (
+                <div
+                  className="gallery-card"
+                  key={photo.id}
+                  onClick={() => openImage(photo)}
+                >
+
+                  <img
+                    src={photo.src}
+                    alt={photo.name}
+                    className={
+                      isAu5
+                        ? "gallery-au5"
+                        : isAu8
+                        ? "gallery-au8"
+                        : isAu13
+                        ? "gallery-au13"
+                        : ""
+                    }
+                  />
+
+                </div>
+              );
+            })}
 
           </div>
 
@@ -3047,17 +3048,13 @@ ${message}
           CONTACT
       ================================================= */}
 
-      <section
-        id="contact"
-        className="section contact"
-      >
+      <section id="contact" className="section contact">
 
         <div className="container">
 
           <div className="section-heading-row">
 
             <div>
-
               <div className="section-label">
                 Contact Us
               </div>
@@ -3065,13 +3062,12 @@ ${message}
               <h2 className="section-title">
                 Let's Start a Conversation.
               </h2>
-
             </div>
 
             <p className="section-description">
               Contact our school for admissions,
-              enquiries, academic information, or any
-              other questions.
+              enquiries, academic information, or
+              any other questions.
             </p>
 
           </div>
@@ -3080,47 +3076,35 @@ ${message}
 
             <div className="contact-info">
 
-              <h3>
-                {schoolName}
-              </h3>
+              <h3>{schoolName}</h3>
 
               <p>
-                We are committed to supporting students and
-                families with quality education, guidance,
-                values, and a positive learning environment.
+                We are committed to supporting
+                students and families with quality
+                education, guidance, values, and a
+                positive learning environment.
               </p>
 
               <div className="contact-details">
 
                 <div className="contact-detail">
-
-                  <strong>
-                    Phone
-                  </strong>
+                  <strong>Phone</strong>
 
                   <a href={`tel:${schoolPhone}`}>
                     {schoolPhone}
                   </a>
-
                 </div>
 
                 <div className="contact-detail">
-
-                  <strong>
-                    Email
-                  </strong>
+                  <strong>Email</strong>
 
                   <a href={`mailto:${schoolEmail}`}>
                     {schoolEmail}
                   </a>
-
                 </div>
 
                 <div className="contact-detail">
-
-                  <strong>
-                    WhatsApp
-                  </strong>
+                  <strong>WhatsApp</strong>
 
                   <a
                     href={`https://wa.me/${whatsappNumber}`}
@@ -3129,19 +3113,12 @@ ${message}
                   >
                     Chat on WhatsApp
                   </a>
-
                 </div>
 
                 <div className="contact-detail">
+                  <strong>School</strong>
 
-                  <strong>
-                    School
-                  </strong>
-
-                  <span>
-                    Aurobindo Kakatiya Secondary School
-                  </span>
-
+                  <span>{schoolName}</span>
                 </div>
 
               </div>
@@ -3150,17 +3127,13 @@ ${message}
 
             <div className="contact-form">
 
-              <h3>
-                Send an Enquiry
-              </h3>
+              <h3>Send an Enquiry</h3>
 
               <div className="form-row">
 
                 <div className="form-group">
 
-                  <label>
-                    Name
-                  </label>
+                  <label>Name</label>
 
                   <input
                     type="text"
@@ -3175,9 +3148,7 @@ ${message}
 
                 <div className="form-group">
 
-                  <label>
-                    Email
-                  </label>
+                  <label>Email</label>
 
                   <input
                     type="email"
@@ -3194,9 +3165,7 @@ ${message}
 
               <div className="form-group">
 
-                <label>
-                  Phone
-                </label>
+                <label>Phone</label>
 
                 <input
                   type="tel"
@@ -3211,9 +3180,7 @@ ${message}
 
               <div className="form-group">
 
-                <label>
-                  Message
-                </label>
+                <label>Message</label>
 
                 <textarea
                   placeholder="Write your message"
@@ -3260,13 +3227,12 @@ ${message}
 
               <div className="footer-brand-content">
 
-                <h3>
-                  {schoolName}
-                </h3>
+                <h3>{schoolName}</h3>
 
                 <p>
-                  A school committed to quality education,
-                  strong values, discipline, confidence, and
+                  A school committed to quality
+                  education, strong values,
+                  discipline, confidence, and
                   holistic development.
                 </p>
 
@@ -3276,9 +3242,7 @@ ${message}
 
             <div>
 
-              <h3>
-                Quick Links
-              </h3>
+              <h3>Quick Links</h3>
 
               <div className="footer-links">
 
@@ -3314,14 +3278,15 @@ ${message}
 
             </div>
 
+            {/* ASTROIDEA SOFTWAY */}
+
             <div>
 
-              <h3>
-                Website Development
-              </h3>
+              <h3>Website Development</h3>
 
               <p>
-                Website developed by Astro Idea Softway.
+                Website developed by
+                AstroIdea Softway.
               </p>
 
               <a
@@ -3330,7 +3295,7 @@ ${message}
                 target="_blank"
                 rel="noreferrer"
               >
-                Astro Idea Softway
+                AstroIdea Softway
               </a>
 
             </div>
@@ -3338,8 +3303,8 @@ ${message}
           </div>
 
           <div className="footer-bottom">
-            © {new Date().getFullYear()} {schoolName}.
-            All Rights Reserved.
+            © {new Date().getFullYear()}{" "}
+            {schoolName}. All Rights Reserved.
           </div>
 
         </div>
@@ -3347,7 +3312,90 @@ ${message}
       </footer>
 
       {/* =================================================
-          LIGHTBOX
+          GALLERY PASSWORD POPUP
+      ================================================= */}
+
+      {galleryPasswordOpen && (
+
+        <div
+          className="password-overlay"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeGalleryPassword();
+            }
+          }}
+        >
+
+          <div className="password-box">
+
+            <button
+              className="password-close"
+              onClick={closeGalleryPassword}
+              aria-label="Close"
+            >
+              ×
+            </button>
+
+            <div className="password-icon">
+              🔒
+            </div>
+
+            <h3>Gallery Access</h3>
+
+            <p>
+              Enter the password to add photos
+              to the school gallery.
+            </p>
+
+            <input
+              type="password"
+              placeholder="Enter password"
+              value={galleryPassword}
+              autoFocus
+              onChange={(event) => {
+                setGalleryPassword(event.target.value);
+                setPasswordError("");
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  verifyGalleryPassword();
+                }
+              }}
+            />
+
+            {passwordError && (
+              <div className="password-error">
+                {passwordError}
+              </div>
+            )}
+
+            <div className="password-actions">
+
+              <button
+                className="password-cancel"
+                onClick={closeGalleryPassword}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="password-submit"
+                onClick={verifyGalleryPassword}
+              >
+                Continue
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
+
+      {/* =================================================
+          FULL IMAGE LIGHTBOX
+          HOME + ABOUT + FACILITIES + GALLERY
       ================================================= */}
 
       {selectedImage && (
@@ -3355,13 +3403,9 @@ ${message}
         <div
           className="lightbox"
           onClick={(event) => {
-
-            if (
-              event.target === event.currentTarget
-            ) {
+            if (event.target === event.currentTarget) {
               closeImage();
             }
-
           }}
         >
 
@@ -3388,16 +3432,12 @@ ${message}
               </div>
 
               {selectedImage.type === "uploaded" && (
-
                 <button
                   className="lightbox-remove"
-                  onClick={
-                    deleteSelectedUploadedPhoto
-                  }
+                  onClick={deleteSelectedUploadedPhoto}
                 >
                   Remove Photo
                 </button>
-
               )}
 
             </div>
