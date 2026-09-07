@@ -55,7 +55,7 @@ import facilityPersonal from "./personal.jpg";
 // SCHOOL DETAILS
 // =====================================================
 
-const schoolName = "Kakatiya E/M Secondary School";
+const schoolName = "Kakatiya  Secondary School";
 const schoolPhone = "9959261196";
 const schoolEmail = "Aurobindo@117gmail.com";
 const whatsappNumber = "919959261196";
