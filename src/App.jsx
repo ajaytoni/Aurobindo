@@ -30,6 +30,16 @@ import galleryImage10 from "./au11.jpg.jpeg";
 import galleryImage11 from "./au12.jpg.jpeg";
 import galleryImage12 from "./au13.jpg.jpeg";
 
+// NEW GALLERY IMAGES
+import galleryImage13 from "./au15.jpg.jpeg";
+import galleryImage14 from "./au16.jpg.jpeg";
+import galleryImage15 from "./au17.jpg.jpeg";
+import galleryImage16 from "./au18.jpg.jpeg";
+import galleryImage17 from "./au19.jpg.jpeg";
+import galleryImage18 from "./au20.jpg.jpeg";
+import galleryImage19 from "./au21.jpg.jpeg";
+import galleryImage20 from "./au22.jpg";
+
 // =====================================================
 // FACILITIES IMAGES
 // =====================================================
@@ -45,7 +55,7 @@ import facilityPersonal from "./personal.jpg";
 // SCHOOL DETAILS
 // =====================================================
 
-const schoolName = "Aurobindo's Kakatiya Secondary School";
+const schoolName = "Kakatiya E/M Secondary School";
 const schoolPhone = "9959261196";
 const schoolEmail = "Aurobindo@117gmail.com";
 const whatsappNumber = "919959261196";
@@ -74,6 +84,16 @@ const localGallery = [
   { id: "gallery-10", name: "School Gallery 10", src: galleryImage10 },
   { id: "gallery-11", name: "School Gallery 11", src: galleryImage11 },
   { id: "gallery-12", name: "School Gallery 12", src: galleryImage12 },
+
+  // NEW PHOTOS
+  { id: "gallery-13", name: "School Gallery 13", src: galleryImage13 },
+  { id: "gallery-14", name: "School Gallery 14", src: galleryImage14 },
+  { id: "gallery-15", name: "School Gallery 15", src: galleryImage15 },
+  { id: "gallery-16", name: "School Gallery 16", src: galleryImage16 },
+  { id: "gallery-17", name: "School Gallery 17", src: galleryImage17 },
+  { id: "gallery-18", name: "School Gallery 18", src: galleryImage18 },
+  { id: "gallery-19", name: "School Gallery 19", src: galleryImage19 },
+  { id: "gallery-20", name: "School Gallery 20", src: galleryImage20 },
 ];
 
 // =====================================================
@@ -1375,12 +1395,14 @@ ${message}
 
         /* =================================================
            IMPORTANT:
-           SHOW HEADS IN AU5, AU8 AND AU13
+           SHOW HEADS IN AU5, AU8, AU13, AU19 AND AU21
         ================================================= */
 
         .gallery-au5,
         .gallery-au8,
-        .gallery-au13 {
+        .gallery-au13,
+        .gallery-au19,
+        .gallery-au21 {
           object-position: center 20%;
         }
 
@@ -1438,6 +1460,7 @@ ${message}
             opacity: 0;
             transform: translateY(15px) scale(0.97);
           }
+
           to {
             opacity: 1;
             transform: translateY(0) scale(1);
@@ -2414,8 +2437,6 @@ ${message}
             </div>
           </div>
 
-          {/* DESKTOP NAVIGATION - CONTACT REMOVED */}
-
           <nav className="desktop-nav">
 
             <button
@@ -2471,15 +2492,15 @@ ${message}
 
           <button
             className="menu-button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() =>
+              setMobileMenuOpen(!mobileMenuOpen)
+            }
             aria-label="Open menu"
           >
             {mobileMenuOpen ? "×" : "☰"}
           </button>
 
         </div>
-
-        {/* MOBILE MENU - CONTACT REMOVED */}
 
         {mobileMenuOpen && (
           <div className="mobile-menu">
@@ -2582,8 +2603,6 @@ ${message}
 
           </div>
 
-          {/* CLICKABLE HOME IMAGE */}
-
           <div
             className="hero-image-frame"
             onClick={openHomeImage}
@@ -2604,8 +2623,6 @@ ${message}
       <section id="about" className="section about">
 
         <div className="container about-grid">
-
-          {/* CLICKABLE ABOUT IMAGE */}
 
           <div
             className="about-image-frame"
@@ -3013,6 +3030,12 @@ ${message}
               const isAu13 =
                 photo.src === galleryImage12;
 
+              const isAu19 =
+                photo.src === galleryImage17;
+
+              const isAu21 =
+                photo.src === galleryImage19;
+
               return (
                 <div
                   className="gallery-card"
@@ -3030,6 +3053,10 @@ ${message}
                         ? "gallery-au8"
                         : isAu13
                         ? "gallery-au13"
+                        : isAu19
+                        ? "gallery-au19"
+                        : isAu21
+                        ? "gallery-au21"
                         : ""
                     }
                   />
@@ -3277,8 +3304,6 @@ ${message}
               </div>
 
             </div>
-
-            {/* ASTROIDEA SOFTWAY */}
 
             <div>
 
